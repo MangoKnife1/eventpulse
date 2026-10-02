@@ -1,0 +1,18 @@
+{
+  "name": "eventpulse-seed",
+  "private": true,
+  "description": "Uploads demo banners to Cloudinary and inserts demo events into Firestore",
+  "scripts": {
+    "seed": "node seed.js",
+    "seed:random": "node seed.js --random 20",
+    "reset": "node seed.js --reset",
+    "wipe": "node seed.js --wipe",
+    "verify": "node verify-user.js"
+  },
+  "dependencies": {
+    "firebase-admin": "^13.0.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

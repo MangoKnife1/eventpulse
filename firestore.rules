@@ -1,0 +1,156 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Helpers ─────────────────────────────────────────────────────────────
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function myRole() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && myRole() == 'admin';
+    }
+
+    function isOrganizer() {
+      return isSignedIn() && myRole() == 'organizer';
+    }
+
+    // Fields that changed between the stored and the incoming document.
+    function changedKeys() {
+      return request.resource.data.diff(resource.data).affectedKeys();
+    }
+
+    // ── users ───────────────────────────────────────────────────────────────
+    // Roles are NEVER set by the client. New accounts are attendees; an admin
+    // upgrades organizers; the first admin is set by hand in the Firebase console.
+    match /users/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+
+      allow create: if isOwner(userId)
+                    && request.resource.data.role == 'attendee'
+                    && request.resource.data.isOrganizerApproved == false;
+
+      allow update: if isAdmin()
+                    || (isOwner(userId)
+                        && !changedKeys().hasAny(['role', 'isOrganizerApproved', 'email']));
+
+      allow delete: if isAdmin();
+    }
+
+    // ── events ──────────────────────────────────────────────────────────────
+    match /events/{eventId} {
+      // Approved events are public (guests can browse). Owners and admins also
+      // see their pending/rejected events.
+      allow read: if resource.data.approvalStatus == 'approved'
+                  || (isSignedIn() && resource.data.organizerId == request.auth.uid)
+                  || isAdmin();
+
+      // Organizers submit events as 'pending'; only admins create them pre-approved.
+      allow create: if (isOrganizer() || isAdmin())
+                    && request.resource.data.organizerId == request.auth.uid
+                    && request.resource.data.registeredCount == 0
+                    && (request.resource.data.approvalStatus == 'pending' || isAdmin());
+
+      allow update: if isAdmin()
+                    // Organizer edits their own event but can't self-approve or fake the count.
+                    || (isOrganizer()
+                        && resource.data.organizerId == request.auth.uid
+                        && !changedKeys().hasAny(['approvalStatus', 'registeredCount', 'organizerId']))
+                    // Registering: +1 to the counter, and only together with creating your ticket.
+                    || (isSignedIn()
+                        && changedKeys().hasOnly(['registeredCount'])
+                        && request.resource.data.registeredCount == resource.data.registeredCount + 1
+                        && request.resource.data.registeredCount <= resource.data.capacity
+                        && !exists(/databases/$(database)/documents/tickets/$(eventId + '_' + request.auth.uid))
+                        && existsAfter(/databases/$(database)/documents/tickets/$(eventId + '_' + request.auth.uid)));
+
+      allow delete: if isAdmin()
+                    || (isOrganizer() && resource.data.organizerId == request.auth.uid);
+    }
+
+    // ── tickets ─────────────────────────────────────────────────────────────
+    // Document id is '<eventId>_<uid>' => one ticket per person per event.
+    match /tickets/{ticketId} {
+      // 'get' must also work for a ticket that does NOT exist yet: registration first
+      // checks "do I already have a ticket?". Without the first line below, that check
+      // is denied (resource is null) and every RSVP fails with permission-denied.
+      allow get: if isSignedIn()
+                 && (ticketId.matches('.*_' + request.auth.uid)
+                     || resource.data.userId == request.auth.uid
+                     || resource.data.organizerId == request.auth.uid
+                     || isAdmin());
+
+      allow list: if isSignedIn()
+                  && (resource.data.userId == request.auth.uid
+                      || resource.data.organizerId == request.auth.uid
+                      || isAdmin());
+
+      allow create: if isSignedIn()
+                    && request.resource.data.userId == request.auth.uid
+                    && ticketId == request.resource.data.eventId + '_' + request.auth.uid
+                    && request.resource.data.status == 'valid'
+                    && request.resource.data.checkedIn == false;
+
+      allow update: if isSignedIn()
+                    && (
+                      // Attendee: reminder settings only.
+                      (resource.data.userId == request.auth.uid
+                        && changedKeys().hasOnly(['reminderEnabled', 'reminderTiming']))
+                      // Event organizer or admin: check-in fields only.
+                      || ((resource.data.organizerId == request.auth.uid || isAdmin())
+                        && changedKeys().hasOnly(['status', 'checkedIn', 'checkedInAt']))
+                    );
+
+      allow delete: if isAdmin();
+    }
+
+    // ── organizerApplications ───────────────────────────────────────────────
+    // Document id = applicant uid (one application per user).
+    match /organizerApplications/{applicationId} {
+      allow read: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+
+      allow create: if isSignedIn()
+                    && applicationId == request.auth.uid
+                    && request.resource.data.userId == request.auth.uid
+                    && request.resource.data.status == 'pending';
+
+      allow update, delete: if isAdmin();
+    }
+
+    // ── notifications ───────────────────────────────────────────────────────
+    match /notifications/{notificationId} {
+      // 'get' also has to work for a notification that does not exist yet
+      // (reminders check "was this already sent?" before creating it).
+      allow get: if isSignedIn() && (resource == null || resource.data.userId == request.auth.uid);
+      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+
+      allow create: if isSignedIn() && (
+        // You can notify yourself (reminders, "pass issued")
+        request.resource.data.userId == request.auth.uid
+        // Admins can notify anyone (approvals)
+        || isAdmin()
+        // An organizer tells an attendee they were checked in at the organizer's OWN event
+        || (request.resource.data.type == 'checkin'
+            && get(/databases/$(database)/documents/events/$(request.resource.data.eventId)).data.organizerId == request.auth.uid)
+        // An attendee tells the organizer about their OWN new registration
+        || (request.resource.data.type == 'registration'
+            && exists(/databases/$(database)/documents/tickets/$(request.resource.data.eventId + '_' + request.auth.uid))
+            && get(/databases/$(database)/documents/events/$(request.resource.data.eventId)).data.organizerId == request.resource.data.userId)
+      );
+
+      allow update: if isSignedIn()
+                    && resource.data.userId == request.auth.uid
+                    && changedKeys().hasOnly(['isRead', 'read']);
+
+      allow delete: if isSignedIn() && resource.data.userId == request.auth.uid;
+    }
+  }
+}
