@@ -13,6 +13,12 @@ flutter run
 
 ---
 
+### Downloadable APK
+
+The latest Android release APK is available in the [`artifacts`](artifacts) folder: [Download EventPulse APK](artifacts/eventpulse-checkin.apk).
+
+---
+
 ### Firebase & Cloudinary
 The app starts in offline demo mode. To switch to live data (Firebase Auth + Firestore) and image uploads (Cloudinary), follow **[SETUP_FIREBASE_CLOUDINARY.md](SETUP_FIREBASE_CLOUDINARY.md)**.
 
