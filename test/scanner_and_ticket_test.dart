@@ -35,6 +35,10 @@ void main() {
       final updatedTicket = eventService.userTickets.firstWhere((t) => t.id == validTicket.id);
       expect(updatedTicket.status, TicketStatus.checkedIn);
       expect(updatedTicket.checkedInAt, isNotNull);
+
+      expect(eventService.notifications, hasLength(greaterThan(0)));
+      expect(eventService.notifications.first.type, 'checkin');
+      expect(eventService.notifications.first.eventId, validTicket.eventId);
     });
 
     test('invalid ticket rejection returns success false and invalid status', () async {

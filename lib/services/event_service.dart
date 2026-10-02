@@ -594,11 +594,24 @@ class EventService extends ChangeNotifier {
   }) async {
     final clean = qrPayload.trim().toUpperCase();
     if (clean.isEmpty) return _invalid();
-    if (useFirebase) {
-      if (!_isOnline) return _checkInOfflineAndQueue(clean, targetEventId);
-      return _checkInRemote(clean, targetEventId);
+    final result = useFirebase
+        ? (_isOnline
+            ? await _checkInRemote(clean, targetEventId)
+            : await _checkInOfflineAndQueue(clean, targetEventId))
+        : _checkInLocal(clean, targetEventId);
+
+    if (result['success'] == true && result['ticket'] is TicketModel) {
+      final ticket = result['ticket'] as TicketModel;
+      await _notifyUser(
+        _boundUid ?? '',
+        title: 'Pass checked in',
+        message: 'Entry approved for ${ticket.userName} at ${ticket.eventTitle}.',
+        type: 'checkin',
+        eventId: ticket.eventId,
+      );
     }
-    return _checkInLocal(clean, targetEventId);
+
+    return result;
   }
 
   Map<String, dynamic> _invalid() => {
