@@ -5,6 +5,7 @@ import '../../services/event_service.dart';
 import '../../services/auth_service.dart';
 import '../../services/cloudinary_service.dart';
 import '../../services/service_exception.dart';
+import '../../services/checkin_feedback_service.dart';
 import '../../models/event_model.dart';
 import '../../models/ticket_model.dart';
 
@@ -302,10 +303,18 @@ class _OrganizerDashboardViewState extends State<OrganizerDashboardView> {
                               InkWell(
                                 onTap: () async {
                                   if (!isChecked) {
-                                    await eventService.checkInTicketWithCode(
+                                    final result = await eventService
+                                        .checkInTicketWithCode(
                                       ticket.qrPayload,
                                       targetEventId: _selectedEventId,
                                     );
+                                    if (result['success'] == true) {
+                                      await CheckinFeedbackService.instance
+                                          .notifyCheckIn(
+                                        message: result['message'] as String? ??
+                                            'Entry approved',
+                                      );
+                                    }
                                     if (!mounted) return;
                                     setState(() {});
                                   }

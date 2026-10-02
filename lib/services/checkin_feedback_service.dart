@@ -14,10 +14,10 @@ class CheckinFeedbackService {
   Future<void> initialize() async {
     const android = AndroidInitializationSettings('@mipmap/ic_launcher');
     const settings = InitializationSettings(android: android);
-    await _notifications.initialize(settings);
+    await _notifications.initialize(settings: settings);
 
     final androidPlugin = _notifications.resolvePlatformSpecificImplementation<
-        AndroidFlutterLocalNotificationsPlugin>();
+      AndroidFlutterLocalNotificationsPlugin>();
     await androidPlugin?.requestNotificationsPermission();
   }
 
@@ -34,10 +34,10 @@ class CheckinFeedbackService {
     );
 
     await _notifications.show(
-      DateTime.now().millisecondsSinceEpoch.remainder(1 << 31),
-      'Pass checked in',
-      message.isEmpty ? 'Entry approved' : message,
-      const NotificationDetails(android: androidDetails),
+      id: DateTime.now().millisecondsSinceEpoch.remainder(1 << 31),
+      title: 'Pass checked in',
+      body: message.isEmpty ? 'Entry approved' : message,
+      notificationDetails: const NotificationDetails(android: androidDetails),
     );
   }
 }
