@@ -38,7 +38,8 @@ Future<void> main() async {
 /// the app falls back to offline demo mode instead of crashing.
 Future<bool> _initFirebase() async {
   try {
-    await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+    await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform);
     return true;
   } catch (e) {
     debugPrint('Firebase unavailable, running in demo mode: $e');
@@ -47,7 +48,8 @@ Future<bool> _initFirebase() async {
 }
 
 /// Lets services trigger on-screen popups (notifications) without a BuildContext.
-final GlobalKey<ScaffoldMessengerState> appMessengerKey = GlobalKey<ScaffoldMessengerState>();
+final GlobalKey<ScaffoldMessengerState> appMessengerKey =
+    GlobalKey<ScaffoldMessengerState>();
 
 class EventPulseApp extends StatelessWidget {
   /// `false` = offline demo mode (sample data, simulated login).
@@ -59,7 +61,8 @@ class EventPulseApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => AuthService(useFirebase: firebaseReady)),
+        ChangeNotifierProvider(
+            create: (_) => AuthService(useFirebase: firebaseReady)),
         // Re-subscribes to the right Firestore queries when the signed-in user or role changes.
         ChangeNotifierProxyProvider<AuthService, EventService>(
           create: (_) => EventService(useFirebase: firebaseReady),
@@ -81,7 +84,8 @@ class EventPulseApp extends StatelessWidget {
               colorSchemeSeed: const Color(0xFFFF5238),
               brightness: Brightness.light,
               scaffoldBackgroundColor: const Color(0xFFF8FAFC),
-              textTheme: GoogleFonts.plusJakartaSansTextTheme(ThemeData.light().textTheme),
+              textTheme: GoogleFonts.plusJakartaSansTextTheme(
+                  ThemeData.light().textTheme),
               appBarTheme: const AppBarTheme(
                 centerTitle: false,
                 elevation: 0,
@@ -94,7 +98,8 @@ class EventPulseApp extends StatelessWidget {
               colorSchemeSeed: const Color(0xFFFF5238),
               brightness: Brightness.dark,
               scaffoldBackgroundColor: const Color(0xFF090D16),
-              textTheme: GoogleFonts.plusJakartaSansTextTheme(ThemeData.dark().textTheme),
+              textTheme: GoogleFonts.plusJakartaSansTextTheme(
+                  ThemeData.dark().textTheme),
               appBarTheme: const AppBarTheme(
                 centerTitle: false,
                 elevation: 0,
@@ -171,7 +176,6 @@ class _MainMobileNavigationState extends State<MainMobileNavigation> {
   }
 
   void _displayPopup(ScaffoldMessengerState messenger, NotificationModel n) {
-
     IconData icon;
     Color color;
     switch (n.type) {
@@ -233,7 +237,8 @@ class _MainMobileNavigationState extends State<MainMobileNavigation> {
                       n.message,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontSize: 12, color: Color(0xFFCBD5E1)),
+                      style: const TextStyle(
+                          fontSize: 12, color: Color(0xFFCBD5E1)),
                     ),
                   ],
                 ),
@@ -273,7 +278,9 @@ class _MainMobileNavigationState extends State<MainMobileNavigation> {
                   height: 4,
                   margin: const EdgeInsets.only(bottom: 16),
                   decoration: BoxDecoration(
-                    color: isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1),
+                    color: isDark
+                        ? const Color(0xFF334155)
+                        : const Color(0xFFCBD5E1),
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -291,7 +298,9 @@ class _MainMobileNavigationState extends State<MainMobileNavigation> {
                 'Experience EventPulse from each participant perspective for academic demo:',
                 style: TextStyle(
                   fontSize: 12,
-                  color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                  color: isDark
+                      ? const Color(0xFF94A3B8)
+                      : const Color(0xFF64748B),
                 ),
               ),
               const SizedBox(height: 16),
@@ -300,7 +309,8 @@ class _MainMobileNavigationState extends State<MainMobileNavigation> {
                 auth,
                 role: UserRole.attendee,
                 title: 'Attendee / Community Member',
-                desc: 'Discover events, register & display dynamic QR check-in pass',
+                desc:
+                    'Discover events, register & display dynamic QR check-in pass',
                 icon: Icons.person_outline,
                 color: const Color(0xFF3B82F6),
               ),
@@ -310,7 +320,8 @@ class _MainMobileNavigationState extends State<MainMobileNavigation> {
                 auth,
                 role: UserRole.organizer,
                 title: 'Event Organizer & Host',
-                desc: 'Manage listings, attendee rosters & door scanner terminal',
+                desc:
+                    'Manage listings, attendee rosters & door scanner terminal',
                 icon: Icons.business_center_outlined,
                 color: const Color(0xFFFF5238),
               ),
@@ -320,7 +331,8 @@ class _MainMobileNavigationState extends State<MainMobileNavigation> {
                 auth,
                 role: UserRole.admin,
                 title: 'Platform Governance & Admin',
-                desc: 'Review pending submissions, enforce safety & platform metrics',
+                desc:
+                    'Review pending submissions, enforce safety & platform metrics',
                 icon: Icons.shield_outlined,
                 color: const Color(0xFF10B981),
               ),
@@ -390,14 +402,15 @@ class _MainMobileNavigationState extends State<MainMobileNavigation> {
                     desc,
                     style: TextStyle(
                       fontSize: 11,
-                      color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                      color: isDark
+                          ? const Color(0xFF94A3B8)
+                          : const Color(0xFF64748B),
                     ),
                   ),
                 ],
               ),
             ),
-            if (isSelected)
-              Icon(Icons.check_circle, size: 20, color: color),
+            if (isSelected) Icon(Icons.check_circle, size: 20, color: color),
           ],
         ),
       ),
@@ -437,17 +450,20 @@ class _MainMobileNavigationState extends State<MainMobileNavigation> {
         destinations = const [
           NavigationDestination(
             icon: Icon(Icons.explore_outlined, size: 22),
-            selectedIcon: Icon(Icons.explore, color: Color(0xFFFF5238), size: 22),
+            selectedIcon:
+                Icon(Icons.explore, color: Color(0xFFFF5238), size: 22),
             label: 'Discover',
           ),
           NavigationDestination(
             icon: Icon(Icons.qr_code_2_outlined, size: 22),
-            selectedIcon: Icon(Icons.qr_code_2, color: Color(0xFFFF5238), size: 22),
+            selectedIcon:
+                Icon(Icons.qr_code_2, color: Color(0xFFFF5238), size: 22),
             label: 'My Passes',
           ),
           NavigationDestination(
             icon: Icon(Icons.person_outline, size: 22),
-            selectedIcon: Icon(Icons.person, color: Color(0xFFFF5238), size: 22),
+            selectedIcon:
+                Icon(Icons.person, color: Color(0xFFFF5238), size: 22),
             label: 'Profile',
           ),
         ];
@@ -465,22 +481,26 @@ class _MainMobileNavigationState extends State<MainMobileNavigation> {
         destinations = const [
           NavigationDestination(
             icon: Icon(Icons.dashboard_outlined, size: 22),
-            selectedIcon: Icon(Icons.dashboard, color: Color(0xFFFF5238), size: 22),
+            selectedIcon:
+                Icon(Icons.dashboard, color: Color(0xFFFF5238), size: 22),
             label: 'Dashboard',
           ),
           NavigationDestination(
             icon: Icon(Icons.qr_code_scanner_outlined, size: 22),
-            selectedIcon: Icon(Icons.qr_code_scanner, color: Color(0xFFFF5238), size: 22),
+            selectedIcon:
+                Icon(Icons.qr_code_scanner, color: Color(0xFFFF5238), size: 22),
             label: 'Scanner',
           ),
           NavigationDestination(
             icon: Icon(Icons.travel_explore_outlined, size: 22),
-            selectedIcon: Icon(Icons.travel_explore, color: Color(0xFFFF5238), size: 22),
+            selectedIcon:
+                Icon(Icons.travel_explore, color: Color(0xFFFF5238), size: 22),
             label: 'Directory',
           ),
           NavigationDestination(
             icon: Icon(Icons.person_outline, size: 22),
-            selectedIcon: Icon(Icons.person, color: Color(0xFFFF5238), size: 22),
+            selectedIcon:
+                Icon(Icons.person, color: Color(0xFFFF5238), size: 22),
             label: 'Profile',
           ),
         ];
@@ -497,17 +517,20 @@ class _MainMobileNavigationState extends State<MainMobileNavigation> {
         destinations = const [
           NavigationDestination(
             icon: Icon(Icons.shield_outlined, size: 22),
-            selectedIcon: Icon(Icons.shield, color: Color(0xFF10B981), size: 22),
+            selectedIcon:
+                Icon(Icons.shield, color: Color(0xFF10B981), size: 22),
             label: 'Governance',
           ),
           NavigationDestination(
             icon: Icon(Icons.view_list_outlined, size: 22),
-            selectedIcon: Icon(Icons.view_list, color: Color(0xFF10B981), size: 22),
+            selectedIcon:
+                Icon(Icons.view_list, color: Color(0xFF10B981), size: 22),
             label: 'All Events',
           ),
           NavigationDestination(
             icon: Icon(Icons.person_outline, size: 22),
-            selectedIcon: Icon(Icons.person, color: Color(0xFF10B981), size: 22),
+            selectedIcon:
+                Icon(Icons.person, color: Color(0xFF10B981), size: 22),
             label: 'Profile',
           ),
         ];
@@ -522,7 +545,9 @@ class _MainMobileNavigationState extends State<MainMobileNavigation> {
     final eventService = Provider.of<EventService>(context);
     final Color roleBadgeColor = auth.isAttendee
         ? const Color(0xFF3B82F6)
-        : (auth.isOrganizer ? const Color(0xFFFF5238) : const Color(0xFF10B981));
+        : (auth.isOrganizer
+            ? const Color(0xFFFF5238)
+            : const Color(0xFF10B981));
 
     return Scaffold(
       appBar: AppBar(
@@ -575,7 +600,8 @@ class _MainMobileNavigationState extends State<MainMobileNavigation> {
                       color: Color(0xFFFF5238),
                       shape: BoxShape.circle,
                     ),
-                    constraints: const BoxConstraints(minWidth: 14, minHeight: 14),
+                    constraints:
+                        const BoxConstraints(minWidth: 14, minHeight: 14),
                     child: Text(
                       '${eventService.unreadNotificationsCount}',
                       textAlign: TextAlign.center,
@@ -591,7 +617,8 @@ class _MainMobileNavigationState extends State<MainMobileNavigation> {
           ),
           // Role badge. Tapping switches roles only in offline demo mode.
           InkWell(
-            onTap: auth.demoMode ? () => _showRoleSelector(context, auth) : null,
+            onTap:
+                auth.demoMode ? () => _showRoleSelector(context, auth) : null,
             borderRadius: BorderRadius.circular(20),
             child: Container(
               margin: const EdgeInsets.symmetric(vertical: 10),
@@ -599,7 +626,8 @@ class _MainMobileNavigationState extends State<MainMobileNavigation> {
               decoration: BoxDecoration(
                 color: roleBadgeColor.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: roleBadgeColor.withValues(alpha: 0.5)),
+                border:
+                    Border.all(color: roleBadgeColor.withValues(alpha: 0.5)),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -608,17 +636,23 @@ class _MainMobileNavigationState extends State<MainMobileNavigation> {
                     width: 6,
                     height: 6,
                     decoration: BoxDecoration(
-                      color: auth.isAuthenticated ? roleBadgeColor : const Color(0xFFFF5238),
+                      color: auth.isAuthenticated
+                          ? roleBadgeColor
+                          : const Color(0xFFFF5238),
                       shape: BoxShape.circle,
                     ),
                   ),
                   const SizedBox(width: 6),
                   Text(
-                    auth.isAuthenticated ? auth.currentRole.name.toUpperCase() : 'GUEST',
+                    auth.isAuthenticated
+                        ? auth.currentRole.name.toUpperCase()
+                        : 'GUEST',
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w800,
-                      color: auth.isAuthenticated ? roleBadgeColor : const Color(0xFFFF5238),
+                      color: auth.isAuthenticated
+                          ? roleBadgeColor
+                          : const Color(0xFFFF5238),
                     ),
                   ),
                   if (auth.demoMode) ...[
@@ -626,7 +660,9 @@ class _MainMobileNavigationState extends State<MainMobileNavigation> {
                     Icon(
                       Icons.keyboard_arrow_down,
                       size: 16,
-                      color: auth.isAuthenticated ? roleBadgeColor : const Color(0xFFFF5238),
+                      color: auth.isAuthenticated
+                          ? roleBadgeColor
+                          : const Color(0xFFFF5238),
                     ),
                   ],
                 ],
@@ -636,7 +672,8 @@ class _MainMobileNavigationState extends State<MainMobileNavigation> {
           const SizedBox(width: 4),
           IconButton(
             tooltip: auth.isDarkMode ? 'Light Theme' : 'Dark Theme',
-            icon: Icon(auth.isDarkMode ? Icons.light_mode : Icons.dark_mode, size: 20),
+            icon: Icon(auth.isDarkMode ? Icons.light_mode : Icons.dark_mode,
+                size: 20),
             onPressed: () => auth.toggleDarkMode(),
           ),
           const SizedBox(width: 8),

@@ -58,9 +58,11 @@ class EventService extends ChangeNotifier {
 
   // ── In-app popups & reminders ────────────────────────────────────────────
   /// Emits every notification that should pop up on screen (shown by main.dart).
-  final StreamController<NotificationModel> _incoming = StreamController.broadcast();
+  final StreamController<NotificationModel> _incoming =
+      StreamController.broadcast();
   Stream<NotificationModel> get incomingNotifications => _incoming.stream;
-  bool _notifPrimed = false; // first snapshot = existing notifications, no popups for those
+  bool _notifPrimed =
+      false; // first snapshot = existing notifications, no popups for those
   String? _currentUid; // signed-in user (set in both demo and Firebase mode)
   Timer? _reminderTimer;
   final Set<String> _remindedKeys = {};
@@ -68,11 +70,13 @@ class EventService extends ChangeNotifier {
   // ── Getters ──────────────────────────────────────────────────────────────
   List<EventModel> get allEvents => List.unmodifiable(_events);
   List<TicketModel> get userTickets => List.unmodifiable(_userTickets);
-  List<NotificationModel> get notifications => List.unmodifiable(_notifications);
+  List<NotificationModel> get notifications =>
+      List.unmodifiable(_notifications);
   List<OrganizerApplicationModel> get pendingApplications => List.unmodifiable(
         _applications.where((a) => a.status == ApplicationStatus.pending),
       );
-  int get unreadNotificationsCount => _notifications.where((n) => !n.isRead).length;
+  int get unreadNotificationsCount =>
+      _notifications.where((n) => !n.isRead).length;
 
   String get selectedCategory => _selectedCategory;
   String get selectedTag => _selectedTag;
@@ -83,7 +87,8 @@ class EventService extends ChangeNotifier {
     final q = _searchQuery.toLowerCase();
     final filtered = _events.where((e) {
       final matchesStatus = e.approvalStatus == ApprovalStatus.approved;
-      final matchesCategory = _selectedCategory == 'All' || e.category == _selectedCategory;
+      final matchesCategory =
+          _selectedCategory == 'All' || e.category == _selectedCategory;
       final matchesTag = _selectedTag == 'All' ||
           e.tags.any((t) => t.toLowerCase() == _selectedTag.toLowerCase());
       final matchesSearch = q.isEmpty ||
@@ -105,14 +110,16 @@ class EventService extends ChangeNotifier {
   }
 
   /// Every approved event, ignoring the search/filter chips on the browse screen.
-  List<EventModel> get openEvents =>
-      _events.where((e) => e.approvalStatus == ApprovalStatus.approved).toList();
+  List<EventModel> get openEvents => _events
+      .where((e) => e.approvalStatus == ApprovalStatus.approved)
+      .toList();
 
   /// Tags used by approved events, most common first (for the filter chips).
   List<String> get availableTags {
     final counts = <String, int>{};
     final display = <String, String>{};
-    for (final e in _events.where((e) => e.approvalStatus == ApprovalStatus.approved)) {
+    for (final e
+        in _events.where((e) => e.approvalStatus == ApprovalStatus.approved)) {
       for (final raw in e.tags) {
         final t = raw.trim();
         if (t.isEmpty) continue;
@@ -164,7 +171,8 @@ class EventService extends ChangeNotifier {
   EventModel? getEventByRegistrationCode(String code) {
     final clean = code.trim().toUpperCase();
     for (final e in _events) {
-      if (e.registrationCode?.toUpperCase() == clean || e.id.toUpperCase() == clean) return e;
+      if (e.registrationCode?.toUpperCase() == clean ||
+          e.id.toUpperCase() == clean) return e;
     }
     return null;
   }
@@ -174,7 +182,9 @@ class EventService extends ChangeNotifier {
 
   TicketModel? getTicketForEvent(String eventId, String userId) {
     for (final t in _userTickets) {
-      if (t.eventId == eventId && t.userId == userId && t.status != TicketStatus.cancelled) {
+      if (t.eventId == eventId &&
+          t.userId == userId &&
+          t.status != TicketStatus.cancelled) {
         return t;
       }
     }
@@ -217,7 +227,8 @@ class EventService extends ChangeNotifier {
     final tickets = _db.collection('tickets');
 
     // Everyone (including guests) sees approved events.
-    _listenEvents(events.where('approvalStatus', isEqualTo: 'approved'), _approvedSrc);
+    _listenEvents(
+        events.where('approvalStatus', isEqualTo: 'approved'), _approvedSrc);
 
     if (uid != null) {
       _listenTickets(tickets.where('userId', isEqualTo: uid), _mineSrc);
@@ -225,7 +236,8 @@ class EventService extends ChangeNotifier {
 
       if (role == UserRole.organizer) {
         _listenEvents(events.where('organizerId', isEqualTo: uid), _ownSrc);
-        _listenTickets(tickets.where('organizerId', isEqualTo: uid), _managedSrc);
+        _listenTickets(
+            tickets.where('organizerId', isEqualTo: uid), _managedSrc);
       } else if (role == UserRole.admin) {
         _listenEvents(events, _allSrc);
         _listenTickets(tickets, _managedSrc);
@@ -248,7 +260,8 @@ class EventService extends ChangeNotifier {
     _subs.clear();
   }
 
-  void _listenEvents(Query<Map<String, dynamic>> query, Map<String, EventModel> target) {
+  void _listenEvents(
+      Query<Map<String, dynamic>> query, Map<String, EventModel> target) {
     _subs.add(query.snapshots().listen((snap) {
       target
         ..clear()
@@ -259,7 +272,8 @@ class EventService extends ChangeNotifier {
     }, onError: (Object e) => debugPrint('Events listener error: $e')));
   }
 
-  void _listenTickets(Query<Map<String, dynamic>> query, Map<String, TicketModel> target) {
+  void _listenTickets(
+      Query<Map<String, dynamic>> query, Map<String, TicketModel> target) {
     _subs.add(query.snapshots().listen((snap) {
       target
         ..clear()
@@ -285,13 +299,15 @@ class EventService extends ChangeNotifier {
       // came from elsewhere (our own writes are shown directly by the code that made them).
       if (_notifPrimed) {
         for (final change in snap.docChanges) {
-          if (change.type != DocumentChangeType.added || change.doc.metadata.hasPendingWrites) {
+          if (change.type != DocumentChangeType.added ||
+              change.doc.metadata.hasPendingWrites) {
             continue;
           }
           final data = change.doc.data();
           if (data == null) continue;
           final n = NotificationModel.fromJson({...data, 'id': change.doc.id});
-          final fresh = DateTime.now().difference(n.timestamp).inMinutes.abs() < 10;
+          final fresh =
+              DateTime.now().difference(n.timestamp).inMinutes.abs() < 10;
           if (!n.isRead && fresh) _emit(n);
         }
       }
@@ -307,7 +323,8 @@ class EventService extends ChangeNotifier {
         .snapshots()
         .listen((snap) {
       _applications = snap.docs
-          .map((d) => OrganizerApplicationModel.fromJson({...d.data(), 'id': d.id}))
+          .map((d) =>
+              OrganizerApplicationModel.fromJson({...d.data(), 'id': d.id}))
           .toList()
         ..sort((a, b) => a.submittedAt.compareTo(b.submittedAt));
       notifyListeners();
@@ -331,14 +348,17 @@ class EventService extends ChangeNotifier {
     required EventModel event,
     required UserModel user,
   }) async {
-    if (user.isGuest) throw const ServiceException('Please sign in to register.');
+    if (user.isGuest)
+      throw const ServiceException('Please sign in to register.');
     if (event.approvalStatus != ApprovalStatus.approved) {
       throw const ServiceException('This event is not open for registration.');
     }
     final existing = getTicketForEvent(event.id, user.id);
     if (existing != null) return existing;
 
-    final ticket = useFirebase ? await _registerRemote(event, user) : _registerLocal(event, user);
+    final ticket = useFirebase
+        ? await _registerRemote(event, user)
+        : _registerLocal(event, user);
     if (useFirebase) {
       _mineSrc[ticket.id] = ticket;
       _rebuildTickets();
@@ -352,7 +372,9 @@ class EventService extends ChangeNotifier {
       eventId: event.id,
       popup: false, // the RSVP screen already shows a confirmation
     );
-    if (useFirebase && event.organizerId.isNotEmpty && event.organizerId != user.id) {
+    if (useFirebase &&
+        event.organizerId.isNotEmpty &&
+        event.organizerId != user.id) {
       await _notifyUser(
         event.organizerId,
         title: 'New registration',
@@ -372,20 +394,25 @@ class EventService extends ChangeNotifier {
     try {
       return await _db.runTransaction<TicketModel>((tx) async {
         final eventSnap = await tx.get(eventRef);
-        if (!eventSnap.exists) throw const ServiceException('This event no longer exists.');
-        final fresh = EventModel.fromJson({...eventSnap.data()!, 'id': eventSnap.id});
+        if (!eventSnap.exists)
+          throw const ServiceException('This event no longer exists.');
+        final fresh =
+            EventModel.fromJson({...eventSnap.data()!, 'id': eventSnap.id});
 
         if (fresh.approvalStatus != ApprovalStatus.approved ||
             fresh.status == EventStatus.cancelled ||
             fresh.status == EventStatus.completed) {
-          throw const ServiceException('This event is not open for registration.');
+          throw const ServiceException(
+              'This event is not open for registration.');
         }
 
         final ticketSnap = await tx.get(ticketRef);
         if (ticketSnap.exists) {
-          return TicketModel.fromJson({...ticketSnap.data()!, 'id': ticketSnap.id});
+          return TicketModel.fromJson(
+              {...ticketSnap.data()!, 'id': ticketSnap.id});
         }
-        if (fresh.isFull) throw const ServiceException('Sorry, this event is fully booked.');
+        if (fresh.isFull)
+          throw const ServiceException('Sorry, this event is fully booked.');
 
         final ticket = _buildTicket(ticketRef.id, fresh, user);
         tx.set(ticketRef, ticket.toJson());
@@ -400,18 +427,23 @@ class EventService extends ChangeNotifier {
     } catch (e) {
       debugPrint('Registration failed: $e');
       throw ServiceException(
-        kDebugMode ? 'Could not issue the ticket: $e' : 'Could not issue the ticket. Please try again.',
+        kDebugMode
+            ? 'Could not issue the ticket: $e'
+            : 'Could not issue the ticket. Please try again.',
       );
     }
   }
 
   TicketModel _registerLocal(EventModel event, UserModel user) {
-    if (event.isFull) throw const ServiceException('Sorry, this event is fully booked.');
-    final ticket = _buildTicket('tkt_${DateTime.now().millisecondsSinceEpoch}', event, user);
+    if (event.isFull)
+      throw const ServiceException('Sorry, this event is fully booked.');
+    final ticket = _buildTicket(
+        'tkt_${DateTime.now().millisecondsSinceEpoch}', event, user);
     _userTickets = [..._userTickets, ticket];
     final i = _events.indexWhere((e) => e.id == event.id);
     if (i != -1) {
-      _events[i] = _events[i].copyWith(registeredCount: _events[i].registeredCount + 1);
+      _events[i] =
+          _events[i].copyWith(registeredCount: _events[i].registeredCount + 1);
     }
     notifyListeners();
     return ticket;
@@ -440,7 +472,8 @@ class EventService extends ChangeNotifier {
 
   static String _randomToken(int length) {
     final rng = Random.secure();
-    return List.generate(length, (_) => _alphabet[rng.nextInt(_alphabet.length)]).join();
+    return List.generate(
+        length, (_) => _alphabet[rng.nextInt(_alphabet.length)]).join();
   }
 
   /// One-of-a-kind pass code for ONE attendee at ONE event:
@@ -468,8 +501,9 @@ class EventService extends ChangeNotifier {
   }) async {
     final clean = qrPayload.trim().toUpperCase();
     if (clean.isEmpty) return _invalid();
-    final result =
-        useFirebase ? await _checkInRemote(clean, targetEventId) : _checkInLocal(clean, targetEventId);
+    final result = useFirebase
+        ? await _checkInRemote(clean, targetEventId)
+        : _checkInLocal(clean, targetEventId);
 
     if (result['success'] == true && result['ticket'] is TicketModel) {
       await _afterCheckIn(result['ticket'] as TicketModel);
@@ -496,7 +530,8 @@ class EventService extends ChangeNotifier {
       message: 'Welcome to ${ticket.eventTitle}. Checked in at $time.',
       type: 'checkin',
       eventId: ticket.eventId,
-      popup: false, // the organizer's device already showed one; the attendee's shows its own
+      popup:
+          false, // the organizer's device already showed one; the attendee's shows its own
     );
   }
 
@@ -507,7 +542,8 @@ class EventService extends ChangeNotifier {
       };
 
   /// Shared decision logic so demo and Firebase behave identically.
-  Map<String, dynamic>? _rejectionFor(TicketModel ticket, String? targetEventId) {
+  Map<String, dynamic>? _rejectionFor(
+      TicketModel ticket, String? targetEventId) {
     if (targetEventId != null &&
         targetEventId.isNotEmpty &&
         targetEventId != 'all' &&
@@ -515,7 +551,8 @@ class EventService extends ChangeNotifier {
       return {
         'success': false,
         'status': 'wrong_event',
-        'message': 'Wrong Event! Pass is for "${ticket.eventTitle}", NOT this meetup.',
+        'message':
+            'Wrong Event! Pass is for "${ticket.eventTitle}", NOT this meetup.',
         'ticket': ticket,
       };
     }
@@ -535,7 +572,8 @@ class EventService extends ChangeNotifier {
       return {
         'success': false,
         'status': 'already_used',
-        'message': 'Duplicate Pass! Already checked in at $time. Re-entry prevented.',
+        'message':
+            'Duplicate Pass! Already checked in at $time. Re-entry prevented.',
         'ticket': ticket,
       };
     }
@@ -545,7 +583,8 @@ class EventService extends ChangeNotifier {
   Map<String, dynamic> _approved(TicketModel ticket) => {
         'success': true,
         'status': 'valid',
-        'message': 'Entry Approved! Welcome ${ticket.userName} (${ticket.eventTitle})',
+        'message':
+            'Entry Approved! Welcome ${ticket.userName} (${ticket.eventTitle})',
         'ticket': ticket,
       };
 
@@ -567,7 +606,8 @@ class EventService extends ChangeNotifier {
     return _approved(updated);
   }
 
-  Future<Map<String, dynamic>> _checkInRemote(String clean, String? targetEventId) async {
+  Future<Map<String, dynamic>> _checkInRemote(
+      String clean, String? targetEventId) async {
     try {
       // Organizers can only look up tickets for their own events (also enforced by rules).
       Query<Map<String, dynamic>> query =
@@ -580,7 +620,8 @@ class EventService extends ChangeNotifier {
 
       final ref = found.docs.first.reference;
       return await _db.runTransaction<Map<String, dynamic>>((tx) async {
-        final snap = await tx.get(ref); // re-read inside the transaction: no double check-in
+        final snap = await tx
+            .get(ref); // re-read inside the transaction: no double check-in
         if (!snap.exists) return _invalid();
         final ticket = TicketModel.fromJson({...snap.data()!, 'id': snap.id});
 
@@ -593,7 +634,8 @@ class EventService extends ChangeNotifier {
           'checkedIn': true,
           'checkedInAt': now.toIso8601String(),
         });
-        return _approved(ticket.copyWith(status: TicketStatus.checkedIn, checkedInAt: now));
+        return _approved(
+            ticket.copyWith(status: TicketStatus.checkedIn, checkedInAt: now));
       });
     } on FirebaseException catch (e) {
       return {
@@ -622,11 +664,15 @@ class EventService extends ChangeNotifier {
     double price = 0.0,
     List<String> tags = const [],
   }) async {
-    if (organizer.role != UserRole.organizer && organizer.role != UserRole.admin) {
-      throw const ServiceException('Only approved organizers can create events.');
+    if (organizer.role != UserRole.organizer &&
+        organizer.role != UserRole.admin) {
+      throw const ServiceException(
+          'Only approved organizers can create events.');
     }
-    if (title.trim().isEmpty) throw const ServiceException('Please enter an event title.');
-    if (capacity < 1) throw const ServiceException('Capacity must be at least 1.');
+    if (title.trim().isEmpty)
+      throw const ServiceException('Please enter an event title.');
+    if (capacity < 1)
+      throw const ServiceException('Capacity must be at least 1.');
 
     final isAdmin = organizer.role == UserRole.admin;
     final id = useFirebase
@@ -653,7 +699,8 @@ class EventService extends ChangeNotifier {
       price: price,
       tags: tags,
       status: EventStatus.upcoming,
-      approvalStatus: isAdmin ? ApprovalStatus.approved : ApprovalStatus.pending,
+      approvalStatus:
+          isAdmin ? ApprovalStatus.approved : ApprovalStatus.pending,
       registrationCode: 'EP-EVT-${_randomToken(8)}',
     );
 
@@ -670,12 +717,14 @@ class EventService extends ChangeNotifier {
     return event;
   }
 
-  Future<void> approveEvent(String eventId) => _setApproval(eventId, ApprovalStatus.approved);
+  Future<void> approveEvent(String eventId) =>
+      _setApproval(eventId, ApprovalStatus.approved);
 
   Future<void> rejectEvent(String eventId, {String? reason}) =>
       _setApproval(eventId, ApprovalStatus.rejected, reason: reason);
 
-  Future<void> _setApproval(String eventId, ApprovalStatus status, {String? reason}) async {
+  Future<void> _setApproval(String eventId, ApprovalStatus status,
+      {String? reason}) async {
     final i = _events.indexWhere((e) => e.id == eventId);
     if (i == -1) return;
     final event = _events[i];
@@ -690,7 +739,8 @@ class EventService extends ChangeNotifier {
         throw ServiceException(_dataMessage(e));
       }
     } else {
-      _events[i] = event.copyWith(approvalStatus: status, rejectionReason: reason);
+      _events[i] =
+          event.copyWith(approvalStatus: status, rejectionReason: reason);
       notifyListeners();
     }
 
@@ -712,7 +762,8 @@ class EventService extends ChangeNotifier {
   Future<void> rejectOrganizerApplication(OrganizerApplicationModel app) =>
       _reviewApplication(app, approve: false);
 
-  Future<void> _reviewApplication(OrganizerApplicationModel app, {required bool approve}) async {
+  Future<void> _reviewApplication(OrganizerApplicationModel app,
+      {required bool approve}) async {
     if (useFirebase) {
       try {
         final batch = _db.batch();
@@ -737,7 +788,9 @@ class EventService extends ChangeNotifier {
 
     await _notifyUser(
       app.userId,
-      title: approve ? 'Organizer application approved' : 'Organizer application declined',
+      title: approve
+          ? 'Organizer application approved'
+          : 'Organizer application declined',
       message: approve
           ? 'You can now create events for ${app.organizationName}.'
           : 'Your organizer application was not approved.',
@@ -760,7 +813,8 @@ class EventService extends ChangeNotifier {
     _updateReminder(i, reminderTiming: timing);
   }
 
-  void _updateReminder(int index, {bool? reminderEnabled, String? reminderTiming}) {
+  void _updateReminder(int index,
+      {bool? reminderEnabled, String? reminderTiming}) {
     final current = _userTickets[index];
     final updated = current.copyWith(
       reminderEnabled: reminderEnabled,
@@ -785,10 +839,14 @@ class EventService extends ChangeNotifier {
   void markNotificationAsRead(String id) {
     final i = _notifications.indexWhere((n) => n.id == id);
     if (i == -1) return;
-    _notifications = [..._notifications]..[i] = _notifications[i].copyWith(isRead: true);
+    _notifications = [..._notifications]..[i] =
+        _notifications[i].copyWith(isRead: true);
     notifyListeners();
     if (useFirebase) {
-      _db.collection('notifications').doc(id).update({'isRead': true, 'read': true}).catchError(
+      _db
+          .collection('notifications')
+          .doc(id)
+          .update({'isRead': true, 'read': true}).catchError(
         (Object e) => debugPrint('Mark-read failed: $e'),
       );
     }
@@ -797,14 +855,18 @@ class EventService extends ChangeNotifier {
   void markAllNotificationsAsRead() {
     final unread = _notifications.where((n) => !n.isRead).toList();
     if (unread.isEmpty) return;
-    _notifications = _notifications.map((n) => n.copyWith(isRead: true)).toList();
+    _notifications =
+        _notifications.map((n) => n.copyWith(isRead: true)).toList();
     notifyListeners();
     if (useFirebase) {
       final batch = _db.batch();
       for (final n in unread) {
-        batch.update(_db.collection('notifications').doc(n.id), {'isRead': true, 'read': true});
+        batch.update(_db.collection('notifications').doc(n.id),
+            {'isRead': true, 'read': true});
       }
-      batch.commit().catchError((Object e) => debugPrint('Mark-all-read failed: $e'));
+      batch
+          .commit()
+          .catchError((Object e) => debugPrint('Mark-all-read failed: $e'));
     }
   }
 
@@ -815,7 +877,8 @@ class EventService extends ChangeNotifier {
     String type = 'reminder',
     String? eventId,
   }) {
-    _notifyUser(_boundUid ?? '', title: title, message: message, type: type, eventId: eventId);
+    _notifyUser(_boundUid ?? '',
+        title: title, message: message, type: type, eventId: eventId);
   }
 
   Future<void> _notifyUser(
@@ -825,7 +888,8 @@ class EventService extends ChangeNotifier {
     String type = 'reminder',
     String? eventId,
     bool popup = true,
-    String? docId, // fixed id = "send at most once", even across restarts or devices
+    String?
+        docId, // fixed id = "send at most once", even across restarts or devices
   }) async {
     final notification = NotificationModel(
       id: docId ?? 'notif_${DateTime.now().millisecondsSinceEpoch}',
@@ -888,7 +952,8 @@ class EventService extends ChangeNotifier {
   // ═════════════════════════════════════════════════════════════════════════
   void _startReminderTimer() {
     if (_reminderTimer != null || _disposed || _currentUid == null) return;
-    _reminderTimer = Timer.periodic(const Duration(seconds: 30), (_) => _checkReminders());
+    _reminderTimer =
+        Timer.periodic(const Duration(seconds: 30), (_) => _checkReminders());
     Future.delayed(const Duration(seconds: 3), _checkReminders);
   }
 
@@ -912,14 +977,18 @@ class EventService extends ChangeNotifier {
     final now = DateTime.now();
 
     for (final t in List<TicketModel>.of(_userTickets)) {
-      if (t.userId != uid || !t.reminderEnabled || t.status != TicketStatus.valid) continue;
+      if (t.userId != uid ||
+          !t.reminderEnabled ||
+          t.status != TicketStatus.valid) continue;
       final lead = _leadFor(t.reminderTiming);
       if (lead == null) continue;
 
       final start = t.eventDateTime;
-      if (!now.isBefore(start) || now.isBefore(start.subtract(lead))) continue; // not due, or already started
+      if (!now.isBefore(start) || now.isBefore(start.subtract(lead)))
+        continue; // not due, or already started
 
-      final timingKey = t.reminderTiming.replaceAll(RegExp(r'[^A-Za-z0-9]'), '');
+      final timingKey =
+          t.reminderTiming.replaceAll(RegExp(r'[^A-Za-z0-9]'), '');
       final key = 'reminder_${t.id}_$timingKey';
       if (!_remindedKeys.add(key)) continue;
 
