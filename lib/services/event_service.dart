@@ -15,6 +15,7 @@ import '../models/user_model.dart';
 import 'demo_data.dart';
 import 'firebase_refs.dart';
 import 'service_exception.dart';
+import 'notification_feedback_service.dart';
 
 /// Events, tickets, notifications and organizer applications.
 ///
@@ -61,6 +62,10 @@ class EventService extends ChangeNotifier {
   final Map<String, EventModel> _offlineEvents = {};
   final Map<String, TicketModel> _offlineTickets = {};
   final Map<String, DateTime> _pendingCheckIns = {};
+  final Set<String> _sentReminders = {};
+  Timer? _reminderTimer;
+  final Set<String> _knownNotificationIds = {};
+  bool _notificationsInitialized = false;
   StreamSubscription<List<ConnectivityResult>>? _connectivitySub;
   bool _isOnline = true;
   String? _boundUid;
@@ -204,6 +209,12 @@ class EventService extends ChangeNotifier {
 
     _boundUid = uid;
     _boundRole = role;
+    _reminderTimer?.cancel();
+    _reminderTimer = uid == null
+      ? null
+      : Timer.periodic(const Duration(minutes: 1), (_) {
+        _fireDueReminders();
+        });
     _cancelSubs();
     for (final m in [_approvedSrc, _ownSrc, _allSrc]) {
       m.clear();
@@ -214,6 +225,8 @@ class EventService extends ChangeNotifier {
     _offlineTickets.clear();
     _pendingCheckIns.clear();
     _notifications = [];
+    _knownNotificationIds.clear();
+    _notificationsInitialized = false;
     _applications = [];
     _ownApplication = null;
 
@@ -384,6 +397,13 @@ class EventService extends ChangeNotifier {
           .map((d) => NotificationModel.fromJson({...d.data(), 'id': d.id}))
           .toList()
         ..sort((a, b) => b.timestamp.compareTo(a.timestamp));
+      for (final notification in _notifications) {
+        if (!_knownNotificationIds.add(notification.id)) continue;
+        if (_notificationsInitialized) {
+          NotificationFeedbackService.instance.show(notification);
+        }
+      }
+      _notificationsInitialized = true;
       notifyListeners();
     }, onError: (Object e) => debugPrint('Notifications listener error: $e')));
   }
@@ -474,6 +494,13 @@ class EventService extends ChangeNotifier {
       title: 'Pass Issued: ${event.title}',
       message: 'Your QR pass is ready in My Passes.',
       type: 'checkin',
+      eventId: event.id,
+    );
+    await _notifyUser(
+      event.organizerId,
+      title: 'New registration',
+      message: '${user.name} registered for ${event.title}.',
+      type: 'registration',
       eventId: event.id,
     );
     return ticket;
@@ -603,9 +630,16 @@ class EventService extends ChangeNotifier {
     if (result['success'] == true && result['ticket'] is TicketModel) {
       final ticket = result['ticket'] as TicketModel;
       await _notifyUser(
-        _boundUid ?? '',
-        title: 'Pass checked in',
-        message: 'Entry approved for ${ticket.userName} at ${ticket.eventTitle}.',
+        ticket.userId,
+        title: "You're checked in!",
+        message: 'Your entry to ${ticket.eventTitle} was confirmed.',
+        type: 'checkin',
+        eventId: ticket.eventId,
+      );
+      await _notifyUser(
+        _boundUid ?? ticket.organizerId,
+        title: 'Checked in: ${ticket.userName}',
+        message: '${ticket.userName} checked in to ${ticket.eventTitle}.',
         type: 'checkin',
         eventId: ticket.eventId,
       );
@@ -990,6 +1024,37 @@ class EventService extends ChangeNotifier {
         debugPrint('Reminder update failed: $e');
       });
     }
+    _fireDueReminders();
+  }
+
+  void _fireDueReminders() {
+    final now = DateTime.now();
+    for (final ticket in _userTickets) {
+      if (!ticket.reminderEnabled || ticket.isOrganizerPass) continue;
+      final offset = _reminderOffset(ticket.reminderTiming);
+      if (offset == null) continue;
+      final reminderAt = ticket.eventDateTime.subtract(offset);
+      final key = '${ticket.id}:${ticket.reminderTiming}';
+      if (_sentReminders.contains(key) || now.isBefore(reminderAt)) continue;
+      if (now.isAfter(ticket.eventDateTime)) continue;
+      _sentReminders.add(key);
+      _notifyUser(
+        ticket.userId,
+        title: 'Event reminder',
+        message: '${ticket.eventTitle} starts in ${ticket.reminderTiming}.',
+        type: 'reminder',
+        eventId: ticket.eventId,
+      );
+    }
+  }
+
+  Duration? _reminderOffset(String timing) {
+    final value = timing.toLowerCase();
+    if (value.contains('15')) return const Duration(minutes: 15);
+    if (value.contains('1 hour')) return const Duration(hours: 1);
+    if (value.contains('3 hour')) return const Duration(hours: 3);
+    if (value.contains('1 day')) return const Duration(days: 1);
+    return null;
   }
 
   // ═════════════════════════════════════════════════════════════════════════
@@ -1060,6 +1125,7 @@ class EventService extends ChangeNotifier {
     if (!useFirebase) {
       _notifications = [notification, ..._notifications];
       notifyListeners();
+      NotificationFeedbackService.instance.show(notification);
       return;
     }
     if (userId.isEmpty) return;
@@ -1093,6 +1159,7 @@ class EventService extends ChangeNotifier {
   @override
   void dispose() {
     _disposed = true;
+    _reminderTimer?.cancel();
     _connectivitySub?.cancel();
     _cancelSubs();
     super.dispose();

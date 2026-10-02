@@ -131,7 +131,13 @@ service cloud.firestore {
 
       // You can notify yourself (e.g. "pass issued"); admins can notify anyone.
       allow create: if isSignedIn()
-                    && (request.resource.data.userId == request.auth.uid || isAdmin());
+              && (request.resource.data.userId == request.auth.uid
+                || isAdmin()
+                || (isOrganizer()
+                  && request.resource.data.eventId is string
+                  && get(/databases/$(database)/documents/tickets/$(request.resource.data.eventId + '_' + request.resource.data.userId)).data.organizerId == request.auth.uid)
+                || (request.resource.data.eventId is string
+                  && get(/databases/$(database)/documents/tickets/$(request.resource.data.eventId + '_' + request.auth.uid)).data.organizerId == request.resource.data.userId));
 
       allow update: if isSignedIn()
                     && resource.data.userId == request.auth.uid

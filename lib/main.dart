@@ -22,6 +22,7 @@ import 'views/organizer/organizer_scanner_view.dart';
 import 'views/admin/admin_governance_view.dart';
 import 'views/shared/profile_view.dart';
 import 'views/shared/notification_center_modal.dart';
+import 'services/notification_feedback_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -71,6 +72,7 @@ class EventPulseApp extends StatelessWidget {
       child: Consumer<AuthService>(
         builder: (context, auth, _) {
           return MaterialApp(
+            navigatorKey: navigatorKey,
             title: 'EventPulse',
             debugShowCheckedModeBanner: false,
             themeMode: auth.isDarkMode ? ThemeMode.dark : ThemeMode.light,
