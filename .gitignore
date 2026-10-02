@@ -23,6 +23,7 @@ android/app/google-services.json
 ios/Runner/GoogleService-Info.plist
 tools/seed/serviceAccountKey.json
 tools/seed/*.json
+tools/seed/**/*.json
 tools/seed/.env
 tools/seed/node_modules/
 
