@@ -1,0 +1,142 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile representation for attendees, organizers, and platform administrators",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique identifier of the user (UID)", "maxLength": 128 },
+        "name": { "type": "string", "description": "Display name of the user", "maxLength": 100 },
+        "email": { "type": "string", "format": "email", "description": "User email address", "maxLength": 150 },
+        "role": { "type": "string", "enum": ["user", "attendee", "organizer", "admin"], "description": "Primary user authorization role" },
+        "avatar": { "type": "string", "description": "URL to the user avatar photo", "maxLength": 500 },
+        "avatarUrl": { "type": "string", "description": "Alias for avatar URL", "maxLength": 500 },
+        "isOrganizerApproved": { "type": "boolean", "description": "Whether the user is verified and approved as an organizer" },
+        "bio": { "type": "string", "description": "Short bio of the user", "maxLength": 500 },
+        "organization": { "type": "string", "description": "Affiliated campus club, tech hub, or organization name", "maxLength": 150 },
+        "joinedDate": { "type": "string", "description": "Date the user registered or joined", "maxLength": 50 },
+        "authProvider": { "type": "string", "enum": ["email", "google"], "description": "Authentication method used" }
+      },
+      "required": ["id", "name", "email", "role"]
+    },
+    "Event": {
+      "title": "Event",
+      "description": "Community meetup or event listing with capacity tracking and check-in configuration",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique event identifier", "maxLength": 128 },
+        "title": { "type": "string", "description": "Title of the meetup or event", "maxLength": 200 },
+        "description": { "type": "string", "description": "Detailed event description and agenda", "maxLength": 3000 },
+        "category": { "type": "string", "description": "Categorical domain (e.g. Technology, Design, Music & Arts)", "maxLength": 80 },
+        "date": { "type": "string", "description": "Date formatted string or ISO date", "maxLength": 50 },
+        "dateTime": { "type": "string", "description": "ISO 8601 timestamp for Flutter compatibility", "maxLength": 50 },
+        "time": { "type": "string", "description": "Event time window (e.g. 6:30 PM - 9:00 PM)", "maxLength": 80 },
+        "location": { "type": "string", "description": "Physical street address or virtual platform indicator", "maxLength": 250 },
+        "venueName": { "type": "string", "description": "Name of the venue or meeting room", "maxLength": 150 },
+        "isVirtual": { "type": "boolean", "description": "True if the event is hosted online" },
+        "meetingLink": { "type": "string", "description": "URL for virtual video room", "maxLength": 500 },
+        "capacity": { "type": "number", "description": "Maximum number of attendees" },
+        "registeredCount": { "type": "number", "description": "Current number of registered attendees" },
+        "organizerId": { "type": "string", "description": "UID of the event organizer", "maxLength": 128 },
+        "organizerName": { "type": "string", "description": "Display name of the organizer", "maxLength": 100 },
+        "organizerEmail": { "type": "string", "format": "email", "description": "Email address of the host", "maxLength": 150 },
+        "bannerUrl": { "type": "string", "description": "Header image or poster artwork URL", "maxLength": 500 },
+        "imageUrl": { "type": "string", "description": "Alias for bannerUrl", "maxLength": 500 },
+        "price": { "type": "number", "description": "Ticket price (0.0 for free admission)" },
+        "status": { "type": "string", "enum": ["pending", "approved", "rejected", "cancelled"], "description": "Publication and governance status" },
+        "approvalStatus": { "type": "string", "enum": ["pending", "approved", "rejected"], "description": "Platform review approval status" },
+        "requiresApproval": { "type": "boolean", "description": "Whether registrations or event publication require manual review" },
+        "rejectionReason": { "type": "string", "description": "Reason provided by admin if event was rejected", "maxLength": 500 },
+        "createdAt": { "type": "string", "description": "ISO timestamp when the event was created", "maxLength": 50 },
+        "tags": { "type": "array", "description": "Searchable tags for quick discovery" },
+        "registrationCode": { "type": "string", "description": "Unique alphanumeric code or QR payload for on-site registration", "maxLength": 64 }
+      },
+      "required": ["id", "title", "category", "location", "organizerId", "capacity"]
+    },
+    "Ticket": {
+      "title": "Ticket",
+      "description": "Attendee entry pass with dynamic QR payload for door check-in",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique ticket document ID", "maxLength": 128 },
+        "ticketCode": { "type": "string", "description": "Unique verifiable QR payload (e.g. EP-TKT-XXXX)", "maxLength": 100 },
+        "qrPayload": { "type": "string", "description": "Alias for ticketCode", "maxLength": 100 },
+        "eventId": { "type": "string", "description": "Target event identifier", "maxLength": 128 },
+        "eventTitle": { "type": "string", "description": "Title of the target meetup", "maxLength": 200 },
+        "eventDate": { "type": "string", "description": "Date of the event", "maxLength": 50 },
+        "eventTime": { "type": "string", "description": "Time window of the event", "maxLength": 80 },
+        "eventLocation": { "type": "string", "description": "Location description", "maxLength": 250 },
+        "venueName": { "type": "string", "description": "Venue name", "maxLength": 150 },
+        "bannerUrl": { "type": "string", "description": "Event banner image URL", "maxLength": 500 },
+        "userId": { "type": "string", "description": "Attendee UID", "maxLength": 128 },
+        "userName": { "type": "string", "description": "Attendee full name", "maxLength": 100 },
+        "userEmail": { "type": "string", "format": "email", "description": "Attendee email address", "maxLength": 150 },
+        "registeredAt": { "type": "string", "description": "ISO timestamp of registration", "maxLength": 50 },
+        "checkedIn": { "type": "boolean", "description": "Whether ticket has been scanned and admitted" },
+        "checkedInAt": { "type": "string", "description": "ISO timestamp of door check-in", "maxLength": 50 },
+        "status": { "type": "string", "enum": ["valid", "used", "checkedIn", "cancelled"], "description": "Status of the ticket pass" },
+        "seatType": { "type": "string", "description": "General Admission or VIP tier", "maxLength": 50 },
+        "reminderEnabled": { "type": "boolean", "description": "Notification reminder preference" },
+        "reminderTiming": { "type": "string", "description": "Lead time for alert (e.g. 15m, 1h, 1d)", "maxLength": 50 },
+        "lastReminderSentAt": { "type": "string", "description": "Timestamp of last notification dispatch", "maxLength": 50 }
+      },
+      "required": ["id", "ticketCode", "eventId", "userId", "userName", "checkedIn"]
+    },
+    "OrganizerApplication": {
+      "title": "OrganizerApplication",
+      "description": "Vetting application submitted by an attendee requesting host permissions",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Application document ID", "maxLength": 128 },
+        "userId": { "type": "string", "description": "Applicant UID", "maxLength": 128 },
+        "userName": { "type": "string", "description": "Applicant display name", "maxLength": 100 },
+        "userEmail": { "type": "string", "format": "email", "description": "Applicant email address", "maxLength": 150 },
+        "organizationName": { "type": "string", "description": "Name of host organization or community", "maxLength": 150 },
+        "reason": { "type": "string", "description": "Statement of purpose for hosting events", "maxLength": 1000 },
+        "experience": { "type": "string", "description": "Prior organizing background or references", "maxLength": 1000 },
+        "status": { "type": "string", "enum": ["pending", "approved", "rejected"], "description": "Review disposition" },
+        "submittedAt": { "type": "string", "description": "ISO timestamp of application submission", "maxLength": 50 }
+      },
+      "required": ["id", "userId", "organizationName", "status", "submittedAt"]
+    },
+    "Notification": {
+      "title": "Notification",
+      "description": "System or event announcement delivered to an attendee or organizer",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Notification ID", "maxLength": 128 },
+        "userId": { "type": "string", "description": "Target recipient UID or 'all'", "maxLength": 128 },
+        "title": { "type": "string", "description": "Brief notification title", "maxLength": 120 },
+        "message": { "type": "string", "description": "Full notification body text", "maxLength": 500 },
+        "eventId": { "type": "string", "description": "Associated event ID if applicable", "maxLength": 128 },
+        "type": { "type": "string", "enum": ["reminder", "update", "approval", "ticket", "checkin", "system"], "description": "Category of alert" },
+        "timestamp": { "type": "string", "description": "ISO timestamp of generation", "maxLength": 50 },
+        "read": { "type": "boolean", "description": "Whether recipient has acknowledged notification" },
+        "isRead": { "type": "boolean", "description": "Alias for read for Flutter compatibility" }
+      },
+      "required": ["id", "userId", "title", "message", "timestamp", "read"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "Profiles for registered community members, organizers, and platform administrators"
+    },
+    "/events/{eventId}": {
+      "schema": "Event",
+      "description": "Community events, schedules, capacity numbers, and verification metadata"
+    },
+    "/tickets/{ticketId}": {
+      "schema": "Ticket",
+      "description": "Attendee tickets with QR check-in codes, issuance times, and check-in statuses"
+    },
+    "/organizerApplications/{applicationId}": {
+      "schema": "OrganizerApplication",
+      "description": "Organizer vetting requests submitted to campus administrators"
+    },
+    "/notifications/{notificationId}": {
+      "schema": "Notification",
+      "description": "Real-time alerts, reminders, and door check-in notices"
+    }
+  }
+}

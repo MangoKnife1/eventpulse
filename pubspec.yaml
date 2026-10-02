@@ -1,0 +1,57 @@
+name: eventpulse_flutter
+description: "EventPulse - Community Event Organizer with Dynamic QR Check-in & Segregated Roles"
+publish_to: "none"
+version: 1.0.0+1
+
+environment:
+  sdk: ">=3.0.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  # State Management
+  provider: ^6.1.1
+  # Dynamic QR Code generation for tickets & passes
+  qr_flutter: ^4.1.0
+  # Date & time formatting
+  intl: ^0.19.0
+  # Persistent local storage
+  shared_preferences: ^2.2.2
+  # Device hardware permission handling
+  permission_handler: ^11.3.1
+  # Live camera QR & barcode scanner
+  mobile_scanner: ^7.4.1
+  # Icons & Modern Typography
+  cupertino_icons: ^1.0.6
+  google_fonts: ^6.1.0
+  # Firebase (Auth + Firestore)
+  firebase_core: ^4.2.1
+  firebase_auth: ^6.1.2
+  cloud_firestore: ^6.1.0
+  # Cloudinary image uploads (unsigned upload over HTTP)
+  image_picker: ^1.1.2
+  http: ^1.2.2
+  connectivity_plus: ^7.3.1
+  flutter_local_notifications: ^19.4.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+  flutter_launcher_icons: ^0.14.4
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  web:
+    generate: true
+    image_path: assets/branding/logo.png
+    background_color: "#090D16"
+    theme_color: "#FF5238"
+  image_path: assets/branding/logo.png
+  remove_alpha_ios: true
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/branding/logo.png

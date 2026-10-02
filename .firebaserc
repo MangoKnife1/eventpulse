@@ -1,0 +1,8 @@
+{
+  "projects": {
+    "eventpulse": "applied-instrument-1mn89",
+    "staging": "eventpulse-5521a"
+  },
+  "targets": {},
+  "etags": {}
+}

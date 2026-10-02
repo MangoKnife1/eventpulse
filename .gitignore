@@ -1,0 +1,30 @@
+# Flutter/Dart
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+/build/
+
+# Android build artifacts
+**/android/.gradle
+**/android/captures/
+**/android/local.properties
+**/android/**/GeneratedPluginRegistrant.java
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# Local-only config
+android/app/google-services.json
+ios/Runner/GoogleService-Info.plist
+tools/seed/serviceAccountKey.json
+tools/seed/*.json
+tools/seed/.env
+tools/seed/node_modules/
+
+#Environment files
+.env
