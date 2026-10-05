@@ -16,6 +16,7 @@ import 'demo_data.dart';
 import 'firebase_refs.dart';
 import 'service_exception.dart';
 import 'notification_feedback_service.dart';
+import 'checkin_feedback_service.dart';
 
 /// Events, tickets, notifications and organizer applications.
 ///
@@ -489,21 +490,33 @@ class EventService extends ChangeNotifier {
       _rebuildTickets();
       notifyListeners();
     }
-    await _notifyUser(
+    unawaited(_showRegistrationFeedback(event.title));
+    // Ticket issuance is complete at this point. Notifications are best effort
+    // and must not keep the attendee waiting for the pass.
+    unawaited(_notifyUser(
       user.id,
       title: 'Pass Issued: ${event.title}',
       message: 'Your QR pass is ready in My Passes.',
       type: 'checkin',
       eventId: event.id,
-    );
-    await _notifyUser(
+    ));
+    unawaited(_notifyUser(
       event.organizerId,
       title: 'New registration',
       message: '${user.name} registered for ${event.title}.',
       type: 'registration',
       eventId: event.id,
-    );
+    ));
     return ticket;
+  }
+
+  Future<void> _showRegistrationFeedback(String eventTitle) async {
+    try {
+      await CheckinFeedbackService.instance
+          .notifyRegistration(eventTitle: eventTitle);
+    } catch (e) {
+      debugPrint('Registration notification failed: $e');
+    }
   }
 
   Future<TicketModel> _registerRemote(EventModel event, UserModel user) async {

@@ -451,7 +451,7 @@ class _ModernEventCard extends StatelessWidget {
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(
-                        event.price == 0 ? 'FREE' : '\$${event.price.toStringAsFixed(0)}',
+                        event.price == 0 ? 'FREE' : '₱${event.price.toStringAsFixed(0)}',
                         style: TextStyle(
                           color: event.price == 0 ? Colors.white : const Color(0xFF0F172A),
                           fontSize: 11,
@@ -662,7 +662,7 @@ class _EventDetailSheet extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      event.price == 0 ? 'Free Admission' : '\$${event.price.toStringAsFixed(2)}',
+                      event.price == 0 ? 'Free Admission' : '₱${event.price.toStringAsFixed(2)}',
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w800,
@@ -871,7 +871,6 @@ class _RsvpBarState extends State<_RsvpBar> {
 
   Future<void> _rsvp(EventService eventService, AuthService authService) async {
     final messenger = ScaffoldMessenger.of(context);
-    final navigator = Navigator.of(context);
     setState(() {
       _busy = true;
       _error = null;
@@ -881,7 +880,8 @@ class _RsvpBarState extends State<_RsvpBar> {
         event: widget.event,
         user: authService.currentUser,
       );
-      navigator.pop();
+      if (!mounted) return;
+      setState(() => _busy = false);
       messenger.showSnackBar(
         SnackBar(
           backgroundColor: const Color(0xFF10B981),
@@ -894,7 +894,6 @@ class _RsvpBarState extends State<_RsvpBar> {
           ),
         ),
       );
-      widget.onNavigateToTicket?.call(widget.event.id);
     } catch (e) {
       // Shown inside the sheet: a SnackBar would be hidden behind it.
       if (mounted) {
